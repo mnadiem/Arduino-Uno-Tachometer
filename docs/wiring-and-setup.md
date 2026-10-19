@@ -1,3 +1,9 @@
+<div align="center">
+
+![Arduino Uno Digital Tachometer](assets/ArduinoUnoDigitalTachometerProject.png)
+
+</div>
+
 # Wiring and Setup
 
 ## Hardware
