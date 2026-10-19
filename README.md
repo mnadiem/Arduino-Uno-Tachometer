@@ -1,6 +1,6 @@
 <div align="center">
 
-![Arduino Uno Digital Tachometer](assets/tachometer-cover.png)
+![Arduino Uno Digital Tachometer](assets/tachometer-cover.svg)
 
 # Arduino Uno Digital Tachometer
 
