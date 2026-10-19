@@ -1,8 +1,14 @@
 <div align="center">
 
+![Arduino Uno Digital Tachometer](assets/tachometer-cover.png)
+
 # Arduino Uno Digital Tachometer
 
-**Real-time rotational speed measurement using Arduino Uno, an IR sensor, and a 16×2 I2C LCD**
+**Measure rotational speed in RPM with Arduino Uno, an MH-B IR sensor, and a 16×2 I2C LCD.**
+
+[![Platform](https://img.shields.io/badge/platform-Arduino%20Uno-00979D?logo=arduino&logoColor=white)](https://www.arduino.cc/)
+[![Language](https://img.shields.io/badge/language-C%2B%2B-00599C?logo=cplusplus&logoColor=white)](src/ArduinoUnoTachometer/ArduinoUnoTachometer.ino)
+[![Measurement](https://img.shields.io/badge/measurement-RPM-blue)](#how-it-works)
 
 </div>
 
@@ -10,108 +16,111 @@
 
 ## Overview
 
-This project measures the rotational speed of a rotating object in **revolutions per minute (RPM)**. An IR obstacle-avoidance / line-tracking sensor module detects changes as the target rotates. An Arduino Uno measures the time between detected pulses, calculates the RPM, and displays the result on a 16×2 LCD with an I2C interface.
+This project measures the rotational speed of a rotating target in **revolutions per minute (RPM)**. An MH-B infrared obstacle-avoidance / line-tracking sensor module detects pulses as the target rotates. The Arduino Uno measures the time between pulses, calculates RPM, displays the result on a 16×2 I2C LCD, and reports measurements to the Serial Monitor.
 
-The project has been implemented and tested on **physical hardware** and also demonstrated in **simulation**.
+The project has been demonstrated on **physical hardware** and in **simulation**.
 
-## Project Demo
+## Demonstrations
 
-### Physical implementation
-
-[**Watch the physical project demo**](Tachometer.mp4)
-
-### Simulation
-
-[**Watch the simulation demo**](Tachometer%20Simulation%20Vid.mp4)
+- [Physical hardware video](Tachometer.mp4)
+- [Simulation video](Tachometer%20Simulation%20Vid.mp4)
 
 ## Hardware
 
-| Component | Description |
+| Component | Details |
 |---|---|
-| Microcontroller | Arduino Uno |
-| Sensor | MH-Sensor-Series (Flying-Fish) MH-B IR Obstacle Avoidance / Line Tracking Sensor Module |
-| Display | 16×2 LCD with I2C interface |
-| LCD I2C address | `0x27` (as configured in the sketch) |
-| Pulse input | Arduino digital pin `D2` (external interrupt) |
+| Microcontroller | Arduino Uno (ATmega328P) |
+| Sensor | MH-Sensor-Series (Flying-Fish) MH-B IR Obstacle Avoidance / Line Tracking Module |
+| Display | 16×2 LCD with I2C backpack |
+| LCD I2C address | `0x27` (configured in the sketch) |
+| Sensor signal | Digital pin `D2` (external interrupt) |
+| Pulses per revolution | `2` (adjust to match the physical target and sensor setup) |
 
-## Circuit
+## Circuit and Simulation
 
 ### Circuit diagram
 
 ![Tachometer circuit diagram](Tachometer%20Circuit.png)
 
-### Simulation — idle / OFF
+### Simulation — measurement OFF
 
-![Tachometer simulation with measurement OFF](Tachometer%20Simulation%20OFF.png)
+![Tachometer simulation OFF](Tachometer%20Simulation%20OFF.png)
 
-### Simulation — active / ON
+### Simulation — measurement ON
 
-![Tachometer simulation with measurement ON](Tachometer%20Simulation%20ON.png)
+![Tachometer simulation ON](Tachometer%20Simulation%20ON.png)
 
 ## How It Works
 
-1. The IR sensor detects the rotating target and produces output pulses.
-2. The Arduino Uno detects rising edges on digital pin `D2` using an external interrupt.
-3. The sketch measures the time between pulses with `micros()`.
-4. The pulse period is used to calculate rotational speed.
-5. The RPM value is shown on the LCD and measurement details are printed to the Serial Monitor.
+1. The IR sensor detects the rotating target and outputs digital pulses.
+2. Arduino detects rising edges on `D2` using an external interrupt.
+3. The interrupt routine records the microsecond timestamp and pulse period.
+4. The main loop calculates RPM from the pulse period and configured pulses per revolution.
+5. If no pulse arrives within the configured timeout, the displayed RPM returns to zero.
+6. RPM is displayed on the LCD and periodically sent to the Serial Monitor.
 
-The current sketch assumes **2 pulses per revolution**, configured by `PulsesPerRevolution`.
+The calculation is:
 
-## Hardware Connections
+`RPM = 60,000,000 / (pulse period in microseconds × pulses per revolution)`
 
-| Module signal | Arduino Uno connection |
+## Wiring
+
+| Signal | Arduino Uno |
 |---|---|
-| IR sensor output | `D2` |
+| IR sensor digital output | `D2` |
 | LCD SDA | `A4` |
 | LCD SCL | `A5` |
-| LCD VCC | `5V` (verify the display module's requirements) |
-| LCD GND | `GND` |
-| IR sensor VCC / GND | Connect to the supply and ground specified for the sensor module |
+| LCD VCC / GND | Connect according to the LCD module specifications |
+| IR sensor VCC / GND | Connect according to the sensor module specifications |
 
-Check the pin labels on your specific modules before wiring. The LCD address in the sketch is `0x27`; some I2C backpacks use a different address.
+Confirm the pin labels on your actual modules before powering the circuit. Some I2C LCD backpacks use an address other than `0x27`.
 
-## Software Requirements
+## Requirements
 
 - [Arduino IDE](https://www.arduino.cc/en/software)
-- `LiquidCrystal_I2C` library compatible with your installed Arduino environment
+- A compatible `LiquidCrystal_I2C` library
 
-## Getting Started
+## Build and Run
 
 1. Clone or download this repository.
-2. Open the Arduino sketch (`.ino`) in the Arduino IDE.
+2. Open `src/ArduinoUnoTachometer/ArduinoUnoTachometer.ino` in the Arduino IDE.
 3. Install a compatible `LiquidCrystal_I2C` library.
-4. Connect the sensor output to `D2` and wire the LCD over I2C as described above.
-5. Select **Arduino Uno** and the correct port in the Arduino IDE.
+4. Select **Arduino Uno** and the correct port.
+5. Connect the sensor output to `D2` and connect the LCD over I2C.
 6. Upload the sketch.
-7. Open the Serial Monitor at **9600 baud**.
-8. Rotate the target and observe the RPM reading on the LCD and Serial Monitor.
+7. Open Serial Monitor at **9600 baud**.
+8. Rotate the target and observe the RPM on the LCD and Serial Monitor.
 
-## Serial Monitor Output
+## Serial Output
 
-The sketch prints the following fields:
+The sketch periodically reports the measured pulse period in microseconds and the calculated RPM.
 
-- `Period`: measured interval between pulses.
-- `Readings`: pulse averaging parameter used by the sketch.
-- `Frequency`: calculated frequency value.
-- `RPM`: calculated rotational speed.
-- `Tachometer`: average of the stored RPM readings.
+## Measurement Notes and Limitations
 
-## Notes
+- `PULSES_PER_REVOLUTION` must match the number of detected pulses per full revolution. An incorrect setting produces a proportional RPM error.
+- The code uses an atomic snapshot when copying 32-bit values shared with the interrupt routine, avoiding torn reads on the Uno's 8-bit AVR CPU.
+- The first detected edge establishes a timing reference; RPM is calculated after a subsequent edge provides a valid period.
+- RPM is set to zero when pulses stop for longer than the configured timeout (`100,000 µs`). This timeout also limits the lowest continuously measurable speed.
+- Sensor alignment, target markings, ambient light, and pulse quality can affect readings. No specific accuracy or maximum RPM is claimed without calibration and testing.
 
-- The configured value `PulsesPerRevolution = 2` must match the number of detected pulses per full revolution for the RPM calculation to be correct.
-- The displayed LCD value is the current `RPM` variable; the `Tachometer` value printed to Serial is the average of the stored readings.
-- Sensor alignment, target surface, ambient light, and pulse detection can affect readings. Validate the sensor position for your setup.
-- This README documents the current project behavior; it does not claim a specific measurement accuracy or maximum RPM.
+## Repository Structure
 
-## Repository Contents
-
-- `Tachometer Circuit.png` — circuit image
-- `Tachometer Simulation OFF.png` — simulation image before active measurement
-- `Tachometer Simulation ON.png` — simulation image during active measurement
-- `Tachometer Simulation Vid.mp4` — simulation video
-- `Tachometer.mp4` — physical project video
+```text
+.
+├── assets/
+│   └── tachometer-cover.png
+├── docs/
+│   └── wiring-and-setup.md
+├── src/
+│   └── ArduinoUnoTachometer/
+│       └── ArduinoUnoTachometer.ino
+├── Tachometer Circuit.png
+├── Tachometer Simulation OFF.png
+├── Tachometer Simulation ON.png
+├── Tachometer Simulation Vid.mp4
+└── Tachometer.mp4
+```
 
 ## License
 
-No license has been specified in this repository yet. Unless a license is added, reuse and redistribution are subject to the default copyright rules.
+No license is currently specified. Unless a license is added, the source code remains subject to default copyright rules.
