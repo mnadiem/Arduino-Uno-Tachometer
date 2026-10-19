@@ -71,7 +71,7 @@ void loop() {
     rpm = 0;
   } else {
     // Divide in stages to avoid overflowing period * pulsesPerRevolution.
-    rpm = 60000000UL / periodSnapshot / PULSES_PER_REVOLUTION;
+    rpm = 60000000UL / (periodSnapshot * PULSES_PER_REVOLUTION);
   }
 
   const uint32_t nowMs = millis();
